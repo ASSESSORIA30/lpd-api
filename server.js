@@ -4,17 +4,17 @@ const cors = require('cors');
 
 const app = express();
 
-// ✅ CORS configurat correctament
+// ✅ CORS
 app.use(cors({
   origin: ['https://lpd.assessoria30.com'],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type']
 }));
 
-// ✅ IMPORTANT: permet preflight (arregla error CORS)
+// ✅ Permet preflight (CORS fix)
 app.options('*', cors());
 
-// ✅ Permet enviar PDFs grans
+// ✅ Permet PDFs grans
 app.use(express.json({ limit: '15mb' }));
 
 // Test
@@ -22,13 +22,12 @@ app.get('/', (req, res) => {
   res.send('LPD API operativa');
 });
 
-// Endpoint principal
+// Endpoint
 app.post('/send-pdf', async (req, res) => {
   try {
     const {
       nombre,
       email_client,
-      email_empresa,
       telefono,
       pdf_base64,
       pdf_filename
@@ -41,24 +40,25 @@ app.post('/send-pdf', async (req, res) => {
       });
     }
 
-    // ✅ Netegem prefix si existeix
+    // 👉 Netegem base64
     const cleanBase64 = pdf_base64.replace(/^data:application\/pdf;base64,/, '');
     const pdfBuffer = Buffer.from(cleanBase64, 'base64');
 
+    // 👉 SMTP segur amb variables
     const transporter = nodemailer.createTransport({
-      host: 'smtp.ionos.es',
-      port: 465,
+      host: process.env.SMTP_HOST || 'smtp.ionos.es',
+      port: Number(process.env.SMTP_PORT || 465),
       secure: true,
       auth: {
-        user: 'lopd@assessoria30.com',
-        pass: 'Placas.22'
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
       }
     });
 
     // 📩 EMAIL A TU
     await transporter.sendMail({
-      from: '"Assessoria 3.0 LPD" <lopd@assessoria30.com>',
-      to: 'lopd@assessoria30.com',
+      from: `"Assessoria 3.0 LPD" <${process.env.SMTP_USER}>`,
+      to: process.env.SMTP_USER,
       subject: `Nou RGPD signat - ${nombre || 'Client'}`,
       text: `Client: ${nombre || ''}\nEmail: ${email_client || ''}\nTelèfon: ${telefono || ''}`,
       attachments: [
@@ -70,13 +70,17 @@ app.post('/send-pdf', async (req, res) => {
       ]
     });
 
-    // 📩 EMAIL AL CLIENT (còpia)
+    // 📩 EMAIL AL CLIENT
     if (email_client) {
       await transporter.sendMail({
-        from: '"Assessoria 3.0" <lopd@assessoria30.com>',
+        from: `"Assessoria 3.0" <${process.env.SMTP_USER}>`,
         to: email_client,
         subject: 'Còpia document RGPD signat',
-        text: `Hola ${nombre || ''},\n\nT’adjuntem còpia del document RGPD signat.\n\nAssessoria 3.0`,
+        text: `Hola ${nombre || ''},
+
+T’adjuntem còpia del document RGPD signat.
+
+Assessoria 3.0`,
         attachments: [
           {
             filename: pdf_filename,
