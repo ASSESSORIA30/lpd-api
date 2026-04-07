@@ -50,11 +50,12 @@ app.post('/send-pdf', async (req, res) => {
     const transporter = nodemailer.createTransport({
   host: 'smtp.ionos.es',
   port: 587,
-  secure: false, // IMPORTANT
+  secure: false,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
   },
+  requireTLS: true,
   tls: {
     rejectUnauthorized: false
   },
