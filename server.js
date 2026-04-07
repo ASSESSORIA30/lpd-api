@@ -40,31 +40,22 @@ app.post('/send-pdf', async (req, res) => {
       });
     }
 
-    // Logs per comprovar variables
-    console.log('SMTP USER:', process.env.SMTP_USER);
-    console.log('SMTP PASS:', process.env.SMTP_PASS ? 'OK' : 'NO DEFINIDA');
+// Logs per comprovar variables
+console.log('SMTP USER:', process.env.SMTP_USER);
+console.log('SMTP PASS:', process.env.SMTP_PASS ? 'OK' : 'NO DEFINIDA');
 
-    const cleanBase64 = pdf_base64.replace(/^data:application\/pdf;base64,/, '');
-    const pdfBuffer = Buffer.from(cleanBase64, 'base64');
+const cleanBase64 = pdf_base64.replace(/^data:application\/pdf;base64,/, '');
+const pdfBuffer = Buffer.from(cleanBase64, 'base64');
 
-    const transporter = nodemailer.createTransport({
-  host: 'smtp.ionos.es',
-  port: 587,
-  secure: false,
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
-  },
-  requireTLS: true,
-  tls: {
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000
+  }
 });
 
-    // Email a tu
+// Email a tu
 console.log('➡️ Abans de sendMail');
 
 await transporter.sendMail({
