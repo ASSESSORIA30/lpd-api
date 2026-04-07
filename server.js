@@ -58,19 +58,23 @@ app.post('/send-pdf', async (req, res) => {
     });
 
     // Email a tu
-    await transporter.sendMail({
-      from: `"Assessoria 3.0 LPD" <${process.env.SMTP_USER}>`,
-      to: process.env.SMTP_USER,
-      subject: `Nou RGPD signat - ${nombre || 'Client'}`,
-      text: `Client: ${nombre || ''}\nEmail: ${email_client || ''}\nTelèfon: ${telefono || ''}`,
-      attachments: [
-        {
-          filename: pdf_filename,
-          content: pdfBuffer,
-          contentType: 'application/pdf'
-        }
-      ]
-    });
+console.log('➡️ Abans de sendMail');
+
+await transporter.sendMail({
+  from: `"Assessoria 3.0 LPD" <${process.env.SMTP_USER}>`,
+  to: process.env.SMTP_USER,
+  subject: `Nou RGPD signat - ${nombre || 'Client'}`,
+  text: `Client: ${nombre || ''}\nEmail: ${email_client || ''}\nTelèfon: ${telefono || ''}`,
+  attachments: [
+    {
+      filename: pdf_filename,
+      content: pdfBuffer,
+      contentType: 'application/pdf'
+    }
+  ]
+});
+
+console.log('✅ Després de sendMail');
 
     // Email al client
     if (email_client) {
