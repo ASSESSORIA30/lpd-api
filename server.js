@@ -4,19 +4,25 @@ const cors = require('cors');
 
 const app = express();
 
+// ✅ CORS configurat correctament
 app.use(cors({
   origin: ['https://lpd.assessoria30.com'],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type']
 }));
 
+// ✅ IMPORTANT: permet preflight (arregla error CORS)
 app.options('*', cors());
+
+// ✅ Permet enviar PDFs grans
 app.use(express.json({ limit: '15mb' }));
 
+// Test
 app.get('/', (req, res) => {
   res.send('LPD API operativa');
 });
 
+// Endpoint principal
 app.post('/send-pdf', async (req, res) => {
   try {
     const {
@@ -35,6 +41,7 @@ app.post('/send-pdf', async (req, res) => {
       });
     }
 
+    // ✅ Netegem prefix si existeix
     const cleanBase64 = pdf_base64.replace(/^data:application\/pdf;base64,/, '');
     const pdfBuffer = Buffer.from(cleanBase64, 'base64');
 
@@ -48,6 +55,7 @@ app.post('/send-pdf', async (req, res) => {
       }
     });
 
+    // 📩 EMAIL A TU
     await transporter.sendMail({
       from: '"Assessoria 3.0 LPD" <lopd@assessoria30.com>',
       to: 'lopd@assessoria30.com',
@@ -62,9 +70,27 @@ app.post('/send-pdf', async (req, res) => {
       ]
     });
 
+    // 📩 EMAIL AL CLIENT (còpia)
+    if (email_client) {
+      await transporter.sendMail({
+        from: '"Assessoria 3.0" <lopd@assessoria30.com>',
+        to: email_client,
+        subject: 'Còpia document RGPD signat',
+        text: `Hola ${nombre || ''},\n\nT’adjuntem còpia del document RGPD signat.\n\nAssessoria 3.0`,
+        attachments: [
+          {
+            filename: pdf_filename,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          }
+        ]
+      });
+    }
+
     res.json({ success: true });
+
   } catch (error) {
-    console.error('Error enviant email:', error);
+    console.error('❌ Error enviant email:', error);
     res.status(500).json({
       success: false,
       error: 'Error enviant email'
@@ -73,6 +99,7 @@ app.post('/send-pdf', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`Servidor actiu al port ${PORT}`);
+  console.log(`🚀 Servidor actiu al port ${PORT}`);
 });
