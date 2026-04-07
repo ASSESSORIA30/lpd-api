@@ -48,14 +48,20 @@ app.post('/send-pdf', async (req, res) => {
     const pdfBuffer = Buffer.from(cleanBase64, 'base64');
 
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.ionos.es',
-      port: Number(process.env.SMTP_PORT || 465),
-      secure: true,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
+  host: 'smtp.ionos.es',
+  port: 587,
+  secure: false, // IMPORTANT
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000
+});
 
     // Email a tu
 console.log('➡️ Abans de sendMail');
